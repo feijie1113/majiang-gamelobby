@@ -1,6 +1,9 @@
-.project-note{display:flex;align-items:center;justify-content:space-between;gap:30px;margin-top:34px;padding:22px 6px;border-top:1px solid #83917c55;color:#c6d1c4}
+.lobby-main{padding-top:60px}
+.project-eyebrow{display:block;margin-bottom:12px;color:#d8c694;font-size:14px;letter-spacing:.08em}
+.demo-title{margin:34px 0 15px;color:#f1e9d9;font-size:20px}
+.project-note{display:flex;align-items:center;justify-content:space-between;gap:30px;margin:25px 0 0;padding:22px 24px;border:1px solid #83917c55;border-radius:18px;background:#1d342c;color:#c6d1c4}
 .project-note small{font-size:13px;color:#d8c694}
 .project-note h2{margin:5px 0 8px;color:#f1e9d9;font-size:19px}
 .project-note p{max-width:700px;margin:0;font-size:14px;line-height:1.8}
 .project-note a{flex:none;color:#efdcab;font-size:14px;text-decoration:underline;text-underline-offset:4px}
-@media(max-width:700px){.project-note{display:block}.project-note a{display:inline-block;margin-top:15px}}
+@media(max-width:700px){.lobby-main{padding-top:36px}.project-note{display:block;padding:18px}.project-note a{display:inline-block;margin-top:15px}}

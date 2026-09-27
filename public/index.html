@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#121a19">
   <title>麻酱的游戏厅</title>
-  <meta name="description" content="麻酱边写边玩的开源网页小游戏项目。">
+  <meta name="description" content="麻酱的开源网页联机实验：用小游戏练习浏览器交互、双人房间和状态同步。">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/project.css">
@@ -14,21 +14,23 @@
   <div class="page">
     <header><a class="brand" href="/"><span class="mark">麻</span><strong>麻酱的游戏厅</strong></a></header>
     <main class="lobby-main">
-      <h1>来都来了，玩两把？</h1>
-      <p class="intro">这儿是麻酱给咱们留的游戏桌。想玩什么，就挑一桌坐下。</p>
+      <small class="project-eyebrow">麻酱的开源网页实验</small>
+      <h1>把网页写成能一起玩的地方</h1>
+      <p class="intro">我在这里练习浏览器 JavaScript 和跨设备房间同步。先做一个朋友们能直接玩的扑克牌原型，再慢慢试别的点子。</p>
+      <section class="project-note" aria-labelledby="project-title">
+        <div>
+          <small>这次在试什么</small>
+          <h2 id="project-title">两个人打开网页，怎样玩在同一桌？</h2>
+          <p>网页负责选牌和显示结果；Cloudflare 上的房间服务保存牌局。两个人各自选好后才一起翻牌，对方的手牌不会提前送到你的浏览器。</p>
+        </div>
+        <a href="https://github.com/feijie1113/majiang-gamelobby" target="_blank" rel="noopener noreferrer">看看源码和实现 ↗</a>
+      </section>
+      <h2 class="demo-title">可玩的原型</h2>
       <section class="board">
         <div class="felt games">
           <a class="game-card" href="/compare.html"><span class="art" aria-hidden="true">♠ ♥</span><strong>扑克牌比大小</strong><small>两个人 · 每人五张 · 纯看牌运</small><em>开一局 ↗</em></a>
           <div class="next-card"><span>＋</span><p>下一款游戏，留个位置</p></div>
         </div>
-      </section>
-      <section class="project-note" aria-labelledby="project-title">
-        <div>
-          <small>边写边玩的小项目</small>
-          <h2 id="project-title">这个游戏厅是怎么做的？</h2>
-          <p>我把网页、双人房间和发牌规则放在一个开源项目里。朋友们玩的时候，也正好帮我试试新写的小游戏。以后想到什么，就继续往这里加。</p>
-        </div>
-        <a href="https://github.com/feijie1113/majiang-gamelobby" target="_blank" rel="noopener noreferrer">看看代码和制作记录 ↗</a>
       </section>
     </main>
   </div>
