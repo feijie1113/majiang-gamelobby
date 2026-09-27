@@ -1,0 +1,14 @@
+{
+  "name": "majiang-gamelobby",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/game.test.js",
+    "test:flow": "node test/local-flow.mjs",
+    "dev:room": "wrangler dev --config room-worker/wrangler.toml",
+    "dev:pages": "wrangler pages dev public --do ROOMS=CompareRoom@majiang-gamelobby-room"
+  },
+  "devDependencies": {
+    "wrangler": "^4.141.0"
+  }
+}

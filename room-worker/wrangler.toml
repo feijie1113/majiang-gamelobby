@@ -1,0 +1,12 @@
+name = "majiang-gamelobby-room"
+main = "./index.js"
+compatibility_date = "2026-09-27"
+workers_dev = false
+
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "CompareRoom"
+
+[exports.CompareRoom]
+type = "durable-object"
+storage = "sqlite"
