@@ -31,8 +31,24 @@ export function createGame(firstToken) {
   return {
     players: [firstToken, null], deck: [], hands: [[], []], pending: [null, null],
     batch: 0, turn: 0, score: [0, 0], phase: "waiting", champion: null,
-    lastReveal: null, rematch: [false, false], version: 1,
+    lastReveal: null, rematch: [false, false], version: 1, emptySince: Date.now(),
   };
+}
+
+export function removePlayer(game, seat) {
+  game.players[seat] = null;
+  // A replacement player starts a fresh match; no one inherits the old hand.
+  game.deck = [];
+  game.hands = [[], []];
+  game.pending = [null, null];
+  game.batch = 0;
+  game.turn = 0;
+  game.score = [0, 0];
+  game.phase = "waiting";
+  game.champion = null;
+  game.lastReveal = null;
+  game.rematch = [false, false];
+  game.version += 1;
 }
 
 export function playCard(game, seat, cardId) {
@@ -69,13 +85,16 @@ export function playCard(game, seat, cardId) {
   game.version += 1;
 }
 
-export function viewFor(game, room, seat) {
+export function viewFor(game, room, seat, online = [false, false]) {
   return {
     room, seat, phase: game.phase, batch: game.batch, turn: game.turn,
     score: game.score, hand: game.hands[seat],
     otherCount: game.hands[1 - seat].length,
     myReady: Boolean(game.pending[seat]), otherReady: Boolean(game.pending[1 - seat]),
+    selectedCardId: game.pending[seat]?.id || null,
     joined: game.players.filter(Boolean).length,
+    otherOnline: online[1 - seat],
+    canKick: online[seat] && !online[1 - seat] && Boolean(game.players[1 - seat]),
     lastReveal: game.lastReveal, champion: game.champion,
     myRematch: game.rematch[seat], otherRematch: game.rematch[1 - seat],
     version: game.version,

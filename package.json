@@ -5,6 +5,7 @@
   "scripts": {
     "test": "node --test test/game.test.js",
     "test:flow": "node test/local-flow.mjs",
+    "test:ws-flow": "node --experimental-websocket test/websocket-flow.mjs",
     "dev:room": "wrangler dev --config room-worker/wrangler.toml",
     "dev:pages": "wrangler pages dev public --do ROOMS=CompareRoom@majiang-gamelobby-room"
   },

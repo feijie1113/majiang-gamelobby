@@ -24,6 +24,15 @@ async function forward(env, room, data) {
 
 export async function onRequest({ request, env }) {
   if (!env.ROOMS) return json({ error: "游戏服务还没接好" }, 503);
+  if (request.headers.get("upgrade")?.toLowerCase() === "websocket") {
+    const url = new URL(request.url);
+    const room = url.searchParams.get("room")?.toUpperCase();
+    const token = url.searchParams.get("token");
+    if (!ROOM_PATTERN.test(room || "") || !token || token.length < 20) {
+      return json({ error: "房间信息不完整" }, 400);
+    }
+    return env.ROOMS.get(env.ROOMS.idFromName(room)).fetch(request);
+  }
   if (request.method === "GET") {
     const url = new URL(request.url);
     const room = url.searchParams.get("room")?.toUpperCase();
@@ -54,5 +63,6 @@ export async function onRequest({ request, env }) {
     return forward(env, room, { action, token, cardId: data.cardId });
   }
   if (action === "rematch") return forward(env, room, { action, token });
+  if (action === "kick" || action === "leave") return forward(env, room, { action, token });
   return json({ error: "未知操作" }, 400);
 }

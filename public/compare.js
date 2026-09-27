@@ -5,7 +5,11 @@ let room = null;
 let token = null;
 let state = null;
 let busy = false;
-let polling = false;
+let socket = null;
+let reconnectTimer = null;
+let reconnectCount = 0;
+
+const savedKey = (code) => `majiang:room:${code}`;
 
 function notify(text) {
   $("notice").textContent = text;
@@ -35,13 +39,70 @@ async function fetchState() {
 function enter(data) {
   room = data.state.room;
   token = data.token;
-  sessionStorage.setItem(`majiang:room:${room}`, token);
+  localStorage.setItem(savedKey(room), token);
+  sessionStorage.removeItem(savedKey(room));
   history.replaceState(null, "", `/compare.html?room=${room}`);
   $("entry").hidden = true;
   $("game").hidden = false;
   notify("");
   render(data.state);
-  if (!polling) { polling = true; setInterval(refresh, 2000); }
+  connect();
+}
+
+function connection(text) { $("connection-status").textContent = text; }
+
+function connect() {
+  if (!room || !token) return;
+  clearTimeout(reconnectTimer);
+  if (socket) socket.close();
+  const url = new URL("/api/room", location.href);
+  url.protocol = location.protocol === "https:" ? "wss:" : "ws:";
+  url.searchParams.set("room", room);
+  url.searchParams.set("token", token);
+  const ws = new WebSocket(url);
+  socket = ws;
+  connection("正在连接…");
+  ws.addEventListener("open", () => {
+    if (socket !== ws) return;
+    reconnectCount = 0;
+    connection("已连接");
+    notify("");
+  });
+  ws.addEventListener("message", (event) => {
+    if (socket !== ws) return;
+    try {
+      const message = JSON.parse(event.data);
+      if (message.type === "state" && message.state.room === room) render(message.state);
+    } catch { /* Ignore malformed updates; reconnection fetches a fresh state. */ }
+  });
+  ws.addEventListener("close", () => {
+    if (socket !== ws || !room) return;
+    connection("连接断开，正在重连…");
+    reconnectCount += 1;
+    if (reconnectCount === 3) {
+      fetchState().catch((error) => {
+        if (/找不到|不在这个房间|过期/.test(error.message)) returnToEntry(error.message);
+      });
+    }
+    reconnectTimer = setTimeout(connect, Math.min(1000 * 2 ** (reconnectCount - 1), 10000));
+  });
+}
+
+function returnToEntry(message) {
+  const oldRoom = room;
+  room = null;
+  token = null;
+  state = null;
+  clearTimeout(reconnectTimer);
+  if (socket) { const old = socket; socket = null; old.close(); }
+  if (oldRoom) {
+    localStorage.removeItem(savedKey(oldRoom));
+    sessionStorage.removeItem(savedKey(oldRoom));
+    $("room-code").value = oldRoom;
+  }
+  $("game").hidden = true;
+  $("entry").hidden = false;
+  notify(message);
 }
 
 function cardElement(card, clickable) {
@@ -50,13 +111,21 @@ function cardElement(card, clickable) {
   if (clickable) {
     el.type = "button";
     el.disabled = state.myReady;
-    el.setAttribute("aria-label", `${card.suit}${rank(card.rank)}，出这张牌`);
+    const selected = state.selectedCardId === card.id;
+    if (selected) el.classList.add("selected");
+    el.setAttribute("aria-label", `${card.suit}${rank(card.rank)}，${selected ? "本回合已出这张牌" : "出这张牌"}`);
     el.addEventListener("click", () => play(card.id));
   }
   for (let i = 0; i < 2; i++) {
     const text = document.createElement("span");
     text.textContent = `${rank(card.rank)}${card.suit}`;
     el.append(text);
+  }
+  if (clickable && state.selectedCardId === card.id) {
+    const badge = document.createElement("b");
+    badge.className = "selected-badge";
+    badge.textContent = "已出";
+    el.append(badge);
   }
   return el;
 }
@@ -93,7 +162,8 @@ function render(next) {
   $("other-score").textContent = next.score[1 - next.seat];
   $("round-label").textContent = next.phase === "waiting" ? "等朋友入座" : next.phase === "finished" ? (next.champion === next.seat ? "你赢啦！" : "朋友赢啦！") : `第 ${next.batch} 组${next.batch > 1 ? "加赛" : ""}`;
   $("turn-label").textContent = next.phase === "playing" ? `第 ${next.turn} / 5 局` : next.phase === "finished" ? `最终比分 ${next.score[next.seat]} : ${next.score[1 - next.seat]}` : "朋友进来就发牌";
-  $("other-status").textContent = next.phase === "waiting" ? "对方还没入座" : next.phase === "playing" ? (next.otherReady ? "朋友已经选好牌了" : "朋友还在选牌") : "五局打完啦";
+  $("other-status").textContent = next.joined < 2 ? "对方还没入座" : !next.otherOnline ? "朋友暂时离线，可用原链接重进" : next.phase === "playing" ? (next.otherReady ? "朋友已经选好牌了" : "朋友还在选牌") : "朋友在线";
+  $("kick-player").hidden = !next.canKick;
   const backs = $("other-cards");
   backs.replaceChildren();
   for (let i = 0; i < next.otherCount; i++) {
@@ -106,18 +176,11 @@ function render(next) {
   hand.replaceChildren();
   if (next.phase === "playing") next.hand.forEach((card) => hand.append(cardElement(card, true)));
   $("hand-title").textContent = next.phase === "playing" ? "你的牌" : next.phase === "finished" ? "这局结束啦" : "坐好等发牌";
-  $("hand-tip").textContent = next.phase === "playing" ? (next.myReady ? "你已经选好，等朋友出牌" : "选一张，等朋友也选好就一起翻开") : next.phase === "finished" ? "想再玩一局？两个人都点一下就重新发牌" : "把邀请链接发给朋友";
+  const selected = next.hand.find((card) => card.id === next.selectedCardId);
+  $("hand-tip").textContent = next.phase === "playing" ? (selected ? `本回合已出 ${selected.suit}${rank(selected.rank)}，等朋友选好后一起翻开` : "选一张，等朋友也选好就一起翻开") : next.phase === "finished" ? "想再玩一局？两个人都点一下就重新发牌" : "把邀请链接发给朋友";
   $("finish-actions").hidden = next.phase !== "finished";
   $("rematch").disabled = next.myRematch;
   $("rematch-status").textContent = next.myRematch ? "等朋友也点再来一局" : next.otherRematch ? "朋友想再来一局" : "";
-}
-
-async function refresh() {
-  if (!room || busy) return;
-  busy = true;
-  try { const next = await fetchState(); if (!state || next.version !== state.version) render(next); notify(""); }
-  catch (error) { notify(error.message); }
-  finally { busy = false; }
 }
 
 async function play(cardId) {
@@ -158,11 +221,28 @@ $("rematch").addEventListener("click", async () => {
   finally { busy = false; }
 });
 
+$("kick-player").addEventListener("click", async () => {
+  if (busy || !state.canKick) return;
+  if (!confirm("移出离线玩家会清空当前这局，确定吗？")) return;
+  busy = true;
+  try { const result = await request({ action: "kick", room }); render(result.state); notify("离线玩家已移出，可以把邀请链接发给朋友"); }
+  catch (error) { notify(error.message); }
+  finally { busy = false; }
+});
+
+$("leave-room").addEventListener("click", async () => {
+  if (busy) return;
+  busy = true;
+  try { await request({ action: "leave", room }); returnToEntry("已退出房间。房间无人在线后最多保留 10 分钟"); }
+  catch (error) { notify(error.message); }
+  finally { busy = false; }
+});
+
 if (/^[A-Z2-9]{8}$/.test(suggested)) {
-  const saved = sessionStorage.getItem(`majiang:room:${suggested}`);
+  const saved = localStorage.getItem(savedKey(suggested)) || sessionStorage.getItem(savedKey(suggested));
   if (saved) {
     room = suggested;
     token = saved;
-    fetchState().then((next) => enter({ token, state: next })).catch(() => { room = null; token = null; });
+    fetchState().then((next) => enter({ token, state: next })).catch((error) => returnToEntry(error.message));
   }
 }

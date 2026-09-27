@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createGame, freshDeck, playCard, startBatch, viewFor } from "../room-worker/game.js";
+import { createGame, freshDeck, playCard, removePlayer, startBatch, viewFor } from "../room-worker/game.js";
 
 function room() {
   const game = createGame("player-one-token");
@@ -26,11 +26,24 @@ test("A 小于 K，双方都选好前不会泄漏手牌", () => {
   ];
   playCard(game, 0, "♠-1");
   assert.equal(game.turn, 1);
+  assert.equal(viewFor(game, "ABCDEFGH", 0).selectedCardId, "♠-1");
   assert.equal(viewFor(game, "ABCDEFGH", 1).otherReady, true);
+  assert.equal(viewFor(game, "ABCDEFGH", 1).selectedCardId, null);
   assert.equal(JSON.stringify(viewFor(game, "ABCDEFGH", 1)).includes("♠-1"), false);
   playCard(game, 1, "♥-13");
   assert.deepEqual(game.score, [0, 1]);
   assert.equal(game.turn, 2);
+});
+
+test("移出离线玩家后重置牌局，但保留房间和另一位玩家", () => {
+  const game = room();
+  playCard(game, 0, game.hands[0][0].id);
+  removePlayer(game, 1);
+  assert.deepEqual(game.players, ["player-one-token", null]);
+  assert.equal(game.phase, "waiting");
+  assert.deepEqual(game.hands, [[], []]);
+  assert.deepEqual(game.pending, [null, null]);
+  assert.deepEqual(game.score, [0, 0]);
 });
 
 test("同点数不计胜，五局打平自动加赛", () => {
