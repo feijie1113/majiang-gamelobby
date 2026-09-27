@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#121a19">
+  <meta name="description" content="麻酱的游戏厅，和朋友们有空就来玩两把。">
+  <title>麻酱的游戏厅</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23121a19'/%3E%3Crect x='10' y='10' width='44' height='44' rx='12' fill='%232c554a' stroke='%23e5cf9e' stroke-width='3'/%3E%3Ccircle cx='25' cy='25' r='4' fill='%23f3e7cb'/%3E%3Ccircle cx='39' cy='39' r='4' fill='%23f3e7cb'/%3E%3C/svg%3E">
+  <style>
+    :root { color-scheme: dark; font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; color: #f1e9d9; background: #111a19; }
+    body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .22; background: radial-gradient(circle at 18% 8%, #60796d 0, transparent 28%), radial-gradient(circle at 84% 76%, #376254 0, transparent 32%); }
+    .page { position: relative; max-width: 1220px; min-height: 100vh; margin: auto; padding: 28px 38px 30px; display: flex; flex-direction: column; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .mark { width: 45px; height: 45px; display: grid; place-items: center; border: 1px solid #cbb984; border-radius: 13px; background: #25463e; color: #f2ddb0; font-size: 24px; transform: rotate(-7deg); box-shadow: 0 5px 0 #0b1412; }
+    .brand strong { display: block; font-size: 19px; letter-spacing: .05em; }
+    main { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 48px 0 42px; }
+    .intro { margin-bottom: 28px; }
+    h1 { margin: 0; font-family: "STSong", "Songti SC", "SimSun", serif; font-size: clamp(38px, 5.3vw, 70px); font-weight: 600; line-height: 1.2; letter-spacing: .04em; }
+    .intro p:last-child { max-width: 660px; margin: 16px 0 0; color: #c9d0c3; font-size: 17px; line-height: 1.8; }
+    .board { padding: 12px; border: 1px solid #6b795f; border-radius: 28px; background: #2c352b; box-shadow: 0 25px 65px #070d0bd1, inset 0 0 0 1px #8d936f4d; }
+    .felt { min-height: 340px; padding: 26px; border: 1px solid #52705c; border-radius: 19px; background: radial-gradient(ellipse at center, #2f6957 0%, #225144 62%, #193e37 100%); box-shadow: inset 0 8px 28px #0c2923a8; display: grid; place-items: center; }
+    .empty { width: min(100%, 690px); min-height: 254px; padding: 30px; border: 1px dashed #b1c7ad7d; border-radius: 16px; background: #0b2e2763; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .tokens { height: 65px; position: relative; width: 94px; margin-bottom: 13px; }
+    .token { position: absolute; top: 8px; width: 52px; height: 52px; border: 2px solid #f0dfb5; border-radius: 14px; background: #e9d9b2; box-shadow: 0 8px 0 #1a4438, 0 12px 13px #09251f88; }
+    .token:first-child { left: 7px; transform: rotate(-18deg); }
+    .token:last-child { right: 5px; transform: rotate(14deg); }
+    .token::after { content: ""; position: absolute; inset: 16px; border-radius: 50%; background: #235546; }
+    .empty h2 { margin: 8px 0 7px; font-size: 24px; font-weight: 600; }
+    .empty p { margin: 0; color: #c7d8ca; font-size: 15px; line-height: 1.8; }
+    @media (max-width: 640px) { .page { padding: 20px 18px 22px; } main { padding: 58px 0 44px; justify-content: flex-start; } .intro { margin-bottom: 24px; } .intro p:last-child { font-size: 16px; } .board { padding: 8px; border-radius: 20px; } .felt { min-height: 340px; padding: 14px; border-radius: 14px; } .empty { min-height: 288px; padding: 22px 16px; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="brand"><span class="mark" aria-hidden="true">麻</span><strong>麻酱的游戏厅</strong></div>
+    </header>
+    <main>
+      <div class="intro">
+        <h1>来都来了，玩两把？</h1>
+        <p>这儿是麻酱给咱们留的游戏桌。以后做了什么新游戏，就放这儿一起试试。</p>
+      </div>
+      <section class="board" aria-label="游戏区域">
+        <div class="felt">
+          <div class="empty">
+            <div class="tokens" aria-hidden="true"><span class="token"></span><span class="token"></span></div>
+            <h2>这桌先空着</h2>
+            <p>游戏还没摆上来。<br>等有了，咱们就开局。</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
