@@ -20,8 +20,10 @@ test("52 张牌不重复，每人拿到 5 张", () => {
 
 test("A 小于 K，双方都选好前不会泄漏手牌", () => {
   const game = room();
-  game.hands[0][0] = { id: "♠-1", suit: "♠", rank: 1 };
-  game.hands[1][0] = { id: "♥-13", suit: "♥", rank: 13 };
+  game.hands = [
+    [1, 2, 3, 4, 5].map((rank) => ({ id: `♠-${rank}`, suit: "♠", rank })),
+    [13, 12, 11, 10, 9].map((rank) => ({ id: `♥-${rank}`, suit: "♥", rank })),
+  ];
   playCard(game, 0, "♠-1");
   assert.equal(game.turn, 1);
   assert.equal(viewFor(game, "ABCDEFGH", 1).otherReady, true);

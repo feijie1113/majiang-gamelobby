@@ -1,6 +1,8 @@
 import { DurableObject } from "cloudflare:workers";
 import { createGame, startBatch, playCard, viewFor } from "./game.js";
 
+const ROOM_TTL_MS = 24 * 60 * 60 * 1000;
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
@@ -20,7 +22,9 @@ export class CompareRoom extends DurableObject {
         if (action === "create") {
           if (game) return json({ error: "房间号重复，请重试" }, 409);
           game = createGame(token);
+          game.cleanupScheduled = true;
           await tx.put("game", game);
+          await this.ctx.storage.setAlarm(Date.now() + ROOM_TTL_MS);
           return json({ token, state: viewFor(game, room, 0) }, 201);
         }
         if (!game) return json({ error: "找不到这个房间" }, 404);
@@ -28,13 +32,20 @@ export class CompareRoom extends DurableObject {
         if (action === "join") {
           if (game.players[1]) return json({ error: "房间已经坐满了" }, 409);
           game.players[1] = token;
+          game.cleanupScheduled = true;
           startBatch(game);
           await tx.put("game", game);
+          await this.ctx.storage.setAlarm(Date.now() + ROOM_TTL_MS);
           return json({ token, state: viewFor(game, room, 1) });
         }
 
         const seat = game.players.indexOf(token);
         if (seat < 0) return json({ error: "你不在这个房间里" }, 403);
+        if (!game.cleanupScheduled) {
+          game.cleanupScheduled = true;
+          await tx.put("game", game);
+          await this.ctx.storage.setAlarm(Date.now() + ROOM_TTL_MS);
+        }
         if (action === "state") return json({ state: viewFor(game, room, seat) });
         if (action === "play") {
           playCard(game, seat, input.cardId);
@@ -54,6 +65,7 @@ export class CompareRoom extends DurableObject {
           return json({ error: "未知操作" }, 400);
         }
         await tx.put("game", game);
+        await this.ctx.storage.setAlarm(Date.now() + ROOM_TTL_MS);
         return json({ state: viewFor(game, room, seat) });
       });
     } catch (error) {
@@ -63,6 +75,10 @@ export class CompareRoom extends DurableObject {
       console.error(error);
       return json({ error: "房间暂时出了点问题，稍后再试" }, 500);
     }
+  }
+
+  async alarm() {
+    await this.ctx.storage.deleteAll();
   }
 }
 
